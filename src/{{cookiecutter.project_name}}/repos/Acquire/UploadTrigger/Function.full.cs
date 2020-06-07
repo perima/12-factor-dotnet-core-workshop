@@ -1,0 +1,215 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Amazon;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.S3Events;
+using Amazon.Rekognition;
+using Amazon.Rekognition.Model;
+using Amazon.SecretsManager;
+using Amazon.SecretsManager.Model;
+using Amazon.XRay.Recorder.Core;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Newtonsoft.Json;
+using Amazon.StepFunctions;
+using Amazon.StepFunctions.Model;
+
+// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
+[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
+
+namespace UploadTrigger
+{
+    public class Function
+    {
+        IAmazonRekognition rekognitionClient { get; set; }
+        IAmazonStepFunctions sfClient { get; set; }
+        string regExNumberPlate { get; set; }
+        AWSXRayRecorder recorder = AWSXRayRecorder.Instance;
+
+        public Function()
+        {
+            rekognitionClient = new AmazonRekognitionClient();
+            sfClient = new AmazonStepFunctionsClient();
+        }
+
+        public async Task<NumberPlateTrigger> FunctionHandler(S3Event evnt, ILambdaContext context)
+        {
+            var s3Event = evnt.Records?[0].S3;
+            context.Logger.LogLine("EVENT Received: " + JsonConvert.SerializeObject(s3Event));
+
+            if (regExNumberPlate == null)
+            {
+                context.Logger.LogLine("regExNumberPlate is not yet populated. Calling getNumberPlateFromSecretsManager()...");
+                regExNumberPlate = await getNumberPlateFromSecretsManager(context);
+                context.Logger.LogLine("regExNumberPlate is " + regExNumberPlate);
+            }
+
+            NumberPlateTrigger result = new NumberPlateTrigger
+            {
+                bucket = s3Event.Bucket.Name,
+                key = s3Event.Object.Key,
+                contentType = "",
+                contentLength = s3Event.Object.Size,
+                charge = int.Parse(Environment.GetEnvironmentVariable("TollgateCharge")),
+                numberPlate = new NumberPlate()
+                {
+                    numberPlateRegEx = this.regExNumberPlate,
+                    detected = false
+                }
+            };
+
+            recorder.BeginSubsegment("TollGantry::Detect Number Plate in Captured Image");
+            recorder.AddMetadata("bucket", s3Event.Bucket.Name);
+            recorder.AddMetadata("key", s3Event.Object.Key);
+            recorder.AddMetadata("regex", this.regExNumberPlate);
+
+            S3Object s3Object = new S3Object();
+            s3Object.Bucket = s3Event.Bucket.Name;
+            s3Object.Name = s3Event.Object.Key;
+            DetectTextRequest detectTextReq = new DetectTextRequest { Image = new Image { S3Object = s3Object } };
+            context.Logger.LogLine("Calling Rekognition ... ");
+            DetectTextResponse detectTextResponse = await rekognitionClient.DetectTextAsync(detectTextReq);
+            context.Logger.LogLine($"Response from Rekognition: {JsonConvert.SerializeObject(detectTextResponse)}");
+
+            // Check if the a valid number was detected...
+            foreach (var textItem in detectTextResponse.TextDetections)
+            {
+                if (!result.numberPlate.detected && textItem.Type.Value == "LINE" && textItem.Confidence > float.Parse(Environment.GetEnvironmentVariable("RekognitionTextMinConfidence")))
+                {
+                    Regex regex = new Regex(regExNumberPlate);
+                    MatchCollection matches = regex.Matches(textItem.DetectedText);
+                    context.Logger.LogLine($"Matches collection: {matches.Count}");
+                    string plateNumber = "";
+                    foreach (Match match in matches)
+                    {
+                        plateNumber += match.Value;
+                    }
+                    if (!string.IsNullOrEmpty(plateNumber))
+                    {
+                        result.numberPlate.detected = true;
+                        result.numberPlate.confidence = textItem.Confidence;
+                        result.numberPlate.numberPlateString = plateNumber;
+                        context.Logger.LogLine($"A valid plate number was detected ({result.numberPlate.numberPlateString})");
+                    }
+                }
+            }
+
+            recorder.EndSubsegment();
+            //
+            // At this point, we either know it is a valid number plate
+            // or it couldn't be determined with adequate confidence
+            // so we need manual intervention 
+            //
+
+            //
+            // Kick off the step function 
+            //
+            context.Logger.LogLine("Starting the state machine");
+            await sfClient.StartExecutionAsync(new StartExecutionRequest() { StateMachineArn = Environment.GetEnvironmentVariable("NumberPlateProcessStateMachine"), Input = JsonConvert.SerializeObject(result) });
+            context.Logger.LogLine("State machine started");
+
+            return result;
+
+        }
+
+        private async Task<string> getNumberPlateFromSecretsManager(ILambdaContext context)
+        {
+            string regEx = "";
+            string secretName = "/Staging/{{cookiecutter.project_name}}/Metadata";
+            string region = "ap-southeast-2";
+            string secret = "";
+            MemoryStream memoryStream = new MemoryStream();
+            IAmazonSecretsManager client = new AmazonSecretsManagerClient(RegionEndpoint.GetBySystemName(region));
+            GetSecretValueRequest request = new GetSecretValueRequest();
+            request.SecretId = secretName;
+            request.VersionStage = "AWSCURRENT"; // VersionStage defaults to AWSCURRENT if unspecified.
+            GetSecretValueResponse response = null;
+            // In this sample we only handle the specific exceptions for the 'GetSecretValue' API.
+            // See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+            // We rethrow the exception by default.
+            try
+            {
+                response = await client.GetSecretValueAsync(request);
+            }
+            catch (DecryptionFailureException e)
+            {
+                context.Logger.LogLine("Secrets Manager can't decrypt the protected secret text using the provided KMS key.");
+                // Deal with the exception here, and/or rethrow at your discretion.
+                throw;
+            }
+            catch (InternalServiceErrorException e)
+            {
+                context.Logger.LogLine("An error occurred on the server side.");
+                // Deal with the exception here, and/or rethrow at your discretion.
+                throw;
+            }
+            catch (Amazon.SecretsManager.Model.InvalidParameterException e)
+            {
+                context.Logger.LogLine("You provided an invalid value for a parameter.");
+                // Deal with the exception here, and/or rethrow at your discretion
+                throw;
+            }
+            catch (InvalidRequestException e)
+            {
+                context.Logger.LogLine("You provided a parameter value that is not valid for the current state of the resource.");
+                // Deal with the exception here, and/or rethrow at your discretion.
+                throw;
+            }
+            catch (Amazon.SecretsManager.Model.ResourceNotFoundException e)
+            {
+                context.Logger.LogLine("We can't find the resource that you asked for.");
+                // Deal with the exception here, and/or rethrow at your discretion.
+                throw;
+            }
+            catch (System.AggregateException ae)
+            {
+                context.Logger.LogLine("More than one of the above exceptions were triggered.");
+                // Deal with the exception here, and/or rethrow at your discretion.
+                throw;
+            }
+
+            // Decrypts secret using the associated KMS CMK.
+            // Depending on whether the secret is a string or binary, one of these fields will be populated.
+            if (response.SecretString != null)
+            {
+                secret = response.SecretString;
+                context.Logger.LogLine($"Secret value is {secret}");
+                var deserialized = JsonConvert.DeserializeObject<Dictionary<string, string>>(secret);
+                regEx = deserialized["NumberPlateRegEx"];
+            }
+            else
+            {
+                memoryStream = response.SecretBinary;
+                StreamReader reader = new StreamReader(memoryStream);
+                string decodedBinarySecret = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(reader.ReadToEnd()));
+                var deserialized = JsonConvert.DeserializeObject<Dictionary<string, string>>(decodedBinarySecret);
+                regEx = deserialized["NumberPlateRegEx"];
+            }
+            context.Logger.LogLine($"NumberPlateRegEx value is {regEx}");
+            return regEx;
+        }
+
+    }
+
+    //
+    // Data to be passed to the state machine
+    //
+    public class NumberPlateTrigger
+    {
+        public string bucket { get; set; }
+        public string key { get; set; }
+        public string contentType { get; set; }
+        public long contentLength { get; set; }
+        public NumberPlate numberPlate { get; set; }
+        public int charge { get; set; }
+    }
+    public class NumberPlate
+    {
+        public bool detected { get; set; }
+        public string numberPlateString { get; set; }
+        public float confidence { get; set; }
+        public string numberPlateRegEx { get; set; }
+    }
+}
