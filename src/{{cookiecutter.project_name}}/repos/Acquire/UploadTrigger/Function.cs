@@ -48,9 +48,11 @@ namespace UploadTrigger
                 contentType = "",
                 contentLength = s3Event.Object.Size,
                 charge = int.Parse(Environment.GetEnvironmentVariable("TollgateCharge")),
-                numberPlate = new NumberPlate() { 
-                  numberPlateRegEx = this.regExNumberPlate,
-                  detected = false}
+                numberPlate = new NumberPlate()
+                {
+                    numberPlateRegEx = this.regExNumberPlate,
+                    detected = false
+                }
             };
 
             recorder.BeginSubsegment("TollGantry::Detect Number Plate in Captured Image");
@@ -108,34 +110,31 @@ namespace UploadTrigger
 
             return result;
         }
+        private async Task<string> getNumberPlateFromSecretsManager(ILambdaContext context)
+        {
+            //TODO: Call secrets manager to retrieve the plate number regex
+            return ".*";
+        }
 
     }
 
-    private async Task<string> getNumberPlateFromSecretsManager(ILambdaContext context)
+    //
+    // Data to be passed to the state machine
+    //
+    public class NumberPlateTrigger
     {
-        //TODO: Call secrets manager to retrieve the plate number regex
-        return "^([A-Z0-9]{3})[vV ]*([A-Z0-9]{3})$";
+        public string bucket { get; set; }
+        public string key { get; set; }
+        public string contentType { get; set; }
+        public long contentLength { get; set; }
+        public NumberPlate numberPlate { get; set; }
+        public int charge { get; set; }
     }
-
-}
-
-//
-// Data to be passed to the state machine
-//
-public class NumberPlateTrigger
-{
-    public string bucket { get; set; }
-    public string key { get; set; }
-    public string contentType { get; set; }
-    public long contentLength { get; set; }
-    public NumberPlate numberPlate { get; set; }
-    public int charge { get; set; }
-}
-public class NumberPlate
-{
-    public bool detected { get; set; }
-    public string numberPlateString { get; set; }
-    public float confidence { get; set; }
-    public string numberPlateRegEx { get; set; }
-}
+    public class NumberPlate
+    {
+        public bool detected { get; set; }
+        public string numberPlateString { get; set; }
+        public float confidence { get; set; }
+        public string numberPlateRegEx { get; set; }
+    }
 }

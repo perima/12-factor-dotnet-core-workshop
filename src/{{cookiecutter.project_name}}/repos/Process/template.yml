@@ -132,14 +132,14 @@ Resources:
                   "Type": "Task",
                   "Comment": "Process Number Plate",
                   "Resource": "${lambdaNOOP}",
-                  "ResultPath": "$.message",
+                  "ResultPath": "$",
                   "OutputPath": "$",
                   "Next": "state.process.AdminActionTest"
                 },
                 "state.process.AdminActionTest": {
                   "Type": "Task",
                   "Comment": "Process Number Plate",
-                  "ResultPath": "$.message",
+                  "ResultPath": "$",
                   "OutputPath": "$",
                   "Resource": "${manualInspectionArn}",
                   "Next": "state.process.InsufficientCreditTest"

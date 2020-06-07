@@ -27,11 +27,7 @@ namespace PlateDetected
             {
                 string message = "Congratulations! A random processing error occurred!";
                 context.Logger.LogLine(message);
-                ////////////////////////////////////////////////////////////
-                //
-                // TODO: Return 'RandomProcessingError' error
-                ///
-                ///////////////////////////////////////////////////////////// 
+                throw new RandomProcessingError(message);
             }
             Table table;
             Document document;
@@ -65,11 +61,7 @@ namespace PlateDetected
                     {
                         string message = "Driver for number plate " + payload.numberPlate.numberPlateString + "(" + document["ownerFirstName"] + ")" + document["ownerLastName"] + ") has insufficient credit (" + document["credit"] + ") for a charge of " + payload.charge;
                         context.Logger.LogLine(message);
-                        /////////////////////////////////////////////////////////////
-                        //
-                        // TODO: Return 'InsufficientCreditError' error
-                        //
-                        ///////////////////////////////////////////////////////////// 
+                        throw new InsufficientCreditError(message);
                     }
 
                 }
@@ -77,30 +69,18 @@ namespace PlateDetected
                 {
                     string message = "Number plate " + payload.numberPlate.numberPlateString + "was not found. This will require manual resolution.";
                     context.Logger.LogLine(message);
-                    /////////////////////////////////////////////////////////////
-                    //
-                    // TODO: Return 'UnknownNumberPlateError' error
-                    //
-                    /////////////////////////////////////////////////////////////  
+                    throw new UnknownNumberPlateError(message);
                 }
             }
             catch (AmazonDynamoDBException e)
             {
               context.Logger.LogLine(e.StackTrace);
-              ////////////////////////////////////////////////////////////
-              //
-              // TODO: Return 'DatabaseAccessError' error
-              ///
-              ///////////////////////////////////////////////////////////// 
+              throw new DatabaseAccessError(e.Message);
             }
             catch (Exception e)
             {
               context.Logger.LogLine(e.StackTrace);
-              ////////////////////////////////////////////////////////////
-              //
-              // TODO: Return 'GenericError' error
-              ///
-              ///////////////////////////////////////////////////////////// 
+              throw new DatabaseAccessError(e.Message);
             }
 
             return payload;

@@ -70,7 +70,7 @@ namespace UploadTrigger
         private async Task<string> getNumberPlateFromSecretsManager(ILambdaContext context)
         {
             //TODO: Call secrets manager to retrieve the plate number regex
-            return "^([A-Z0-9]{3})[vV ]*([A-Z0-9]{3})$";
+            return ".*";
         }
 
     }

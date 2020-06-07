@@ -328,63 +328,47 @@ The system so far is functional, but incomplete. In this task you will implement
 69. Scroll down to the **Sample code** section and select **Javascript**
 70. Note how the sample code instantiates the SecretsManager client?
 
-    ```javasript
-    // Create a Secrets Manager client
-    var client = new AWS.SecretsManager({
-        endpoint: endpoint,
-        region: region
-    });
+    ```csharp
+    IAmazonSecretsManager client = new AmazonSecretsManagerClient(RegionEndpoint.GetBySystemName(region));
     ```
 
     Once the client is instantiated, a secret can be retrieved by calling:
 
-    ```javascript
-    client.getSecretValue({SecretId: secretName}, function(err, data) {
-      if(err) {
-        ...
-      }
-      else 
-      {
-        if(data.SecretString !== "") 
-        {
-            secret = data.SecretString;
-        }
-      });
-      ```
+    ```csharp
+    response = client.GetSecretValueAsync(request);
+    ```
 
     In our case, we are using the SecretString parameter as a property bag, and the string itself is a JSON object. The number plate regular expression we need is stored in this serialised object, as a property called `NumberPlateRegEx`.
 
-71. In your AWS Cloud9 IDE, locate the **repos/Acquire/UploadTrigger/index.js** Lambda function and open it in the IDE
+71. In your AWS Cloud9 IDE, locate the **repos/Acquire/UploadTrigger/Function.cs** Lambda function and open it in the IDE
 72. Locate the function **getNumberPlateFromSecretsManager** in the source code and note that it simply returns `.*` as the regular expression. Your task here is to modify this function so that it correctly returns the `NumberPlateRegEx` value that is stored in AWS Secrets Manager, using the sample code as inspiration. The pseudo code for your implementation should do the following:
 
   -   Instantiate the SecretsManager client object from the AWS SDK (note that when you construct the client, you do not have to specify endpoint and region).
-  -   Call `getSecretValue({SecretId: "/Staging/{{cookiecutter.project_name}}/Metadata"}, ()=> ...)` to retrieve the property bag as a JSON serialised string
+  -   Call `GetSecretValueAsync({SecretId: "/Staging/{{cookiecutter.project_name}}/Metadata"}, ()=> ...)` to retrieve the secret.
   -   Handle errors - in all cases, log the error and then simply return a valid regular expression such as `.*`. In a real environment implementation, you would handle errors robustly, but for this workshop, simply falling back to a 'catch all' expression is ok
-  -   Assuming all is ok, dereference the `SecretString` field of the return object and parse it as JSON using `JSON.parse(...)`
-  -   In the resulting object, dereference the `NumberPlateRegEx` property to get the value to return from the function. Note that you do not use the 'return' keyword, but instead, call the `callback()` method and pass in the number plate regular express you retrieved from the call to Secrets Manager.
+  -   Assuming all is ok, dereference the `SecretString` field of the return object and parse it as JSON using `JsonConvert.DeserializeObject(...)`
+  -   In the resulting object, dereference the `NumberPlateRegEx` property to get the value to return from the function.
 
-      Note: If you get stuck and want to skip coding this function by hand, you will find a finished version of the function in UploadTrigger/getNumberPlateFromSecretsManager.js
+      Note: If you get stuck and want to skip coding this function by hand, you will find a finished version of the function in UploadTrigger/getNumberPlateFromSecretsManager.txt
 
 #### Implement code to trigger the AWS Step Function in the **repos/Acquire/UploadTrigger/index.js** file
 
-73. In the same **UploadTrigger/index.js** file, locate the line `// TODO: Call the Step Function using the AWS SDK`. Remove the `console.log()` placeholder statement.
-74. [Refer to the documentation here](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#startExecution-property) and call the `startExecution` method of the `AWS.StepFunctions()` client object, passing in the `executionParams` object that has already been constructed in the code provided. The executionParams object has the ARN of the state machine to trigger, and the input object to pass in:
+73. In the same **UploadTrigger/Function.cs** file, locate the line `// TODO: Call the Step Function using the AWS SDK`.
+74. [Refer to the documentation here](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#startExecution-property) and call the `StartExecutionAsync` method of the `AmazonStepFunctionsClient` client object, passing in the `StartExecutionRequest` object that has already been constructed in the code provided. The StartExecutionRequest object has the ARN of the state machine to trigger, and the input object to pass in:
 
-    ```javascript
-    var executionParams = 
-    {
-      stateMachineArn: process.env.NumberPlateProcessStateMachine,
-      input: JSON.stringify(numberPlateTriggerResult)
-    };
+    ```csharp
+    new StartExecutionRequest() { 
+      StateMachineArn = Environment.GetEnvironmentVariable("NumberPlateProcessStateMachine"), 
+      Input = JsonConvert.SerializeObject(result) }
     ```
 
-    Note: If you get stuck and want to skip coding this function by hand, you will find a finished version of the function in UploadTrigger/startExecution.js
+    Note: If you get stuck and want to skip coding this function by hand, you will find a finished version of the function in UploadTrigger/Function.full
 
-75. After making all the changes, save the **repos/Acquire/UploadTrigger/index.js** file in the AWS Cloud9 IDE.
+75. After making all the changes, save the **repos/Acquire/UploadTrigger/Function.cs** file in the AWS Cloud9 IDE.
 76. The SAM template that was provided for you initially defines an AWS Lambda function as a placeholder, and that doesn't perform any real work - called **NOOP** (No Operation). In order for the S3 upload trigger to fire the **UploadTrigger** Lambda function, you need to edit the template so that it refers to the updated function. In the AWS Cloud9 IDE, open the file **repos/Acquire/template.yml**
 77. Locate the **Resource** called `UploadTrigger`
-78. Within this resource, locate the `Handler:` property and note that it is set to `NOOP/index.handler`
-79. Modify the `Handler:` value, setting it to `UploadTrigger/index.handler` instead. This will instruct the template to update the S3 upload trigger to fire the `UploadTrigger` Lambda function
+78. Within this resource, locate the `Handler:` property and note that it is set to `NOOP::UploadTrigger.Function::FunctionHandler`
+79. Modify the `Handler:` value, setting it to `UploadTrigger::UploadTrigger.Function::FunctionHandler` instead. This will instruct the template to update the S3 upload trigger to fire the `UploadTrigger` Lambda function
 
 #### Deploy the changes using CI/CD
 
@@ -400,17 +384,17 @@ The system so far is functional, but incomplete. In this task you will implement
 81. Confirm the push has succeeded by checking the output on the terminal. If all is well, [click here to open to the AWS CodePipeline console for the Acquire component](https://{{cookiecutter.AWS_region}}.console.aws.amazon.com/codesuite/codepipeline/pipelines/{{cookiecutter.project_name_acquire}}/view?region={{cookiecutter.AWS_region}})
 82. In a moment or two you will see the pipeline commence the build and deploy process, pushing the changes you have made to the Lambda function into your Staging environment. You do not have to wait here until the deployment is complete, continue on with the following steps while the automated deployment takes place.
 
-#### Implement code to throw various errors from the AWS Lambda Function in the **repos/Process/PlateDetected/index.js** file
+#### Implement code to throw various errors from the AWS Lambda Function in the **repos/Process/PlateDetected/Function.cs** file
 
-83. In your AWS Cloud9 IDE, locate the **repos/Process/PlateDetected/index.js** Lambda function and open it in the IDE
-84. Locate each of the `TODO:` items in the file. Your task here is to implement callbacks at each of the points errors are detected, and return the application-specific error objects as specified in the source code. Each of the error types have been provided as objects defined in the `errors` folder, and already included into the function using `require` statements. You simply need to use the `callback` function to return a newly instantiated object of the various types. When your code returns these objects, the state machine will be able to make branching logic decisions accordingly. Each of the `TODO` items specifies the types you need to pass to the `callback`, and where appropriate, you can use the related `console.log` statements as inspiration for the error message content to construct the error objects with. For example, search for `TODO: Return 'errorInsufficientCredit' error`. The source code looks like this:
+83. In your AWS Cloud9 IDE, locate the **repos/Process/PlateDetected/Function.cs** Lambda function and open it in the IDE
+84. Locate each of the `TODO:` items in the file. Your task here is to throw an exception at each of the points errors are detected, and return the application-specific error objects as specified in the source code. Each of the error types have been provided as objects defined in the `Functions.cs`. You simply need to use the `throw` statement to return a newly instantiated object of the various error types. When your code returns these objects, the state machine will be able to make branching logic decisions accordingly. Each of the `TODO` items specifies the types you need to pass to the `state mechine`, and where appropriate, you can use the related `message` variable and `context.Logger.LogLine` statements as inspiration for the error message content to construct the error objects with. For example, search for `TODO: Return 'errorInsufficientCredit' error`. The source code looks like this:
 
-      ```javascript
+      ```csharp
       else
       {
-          // Insufficient credit
-          var responseMessage = `Driver for number plate ${payload.numberPlate.numberPlateString} (${data.Item.ownerFirstName} ${data.Item.ownerLastName}) has insufficient credit ($${data.Item.credit}) for a charge of $${payload.charge}`;
-          console.log(responseMessage);
+          string message = "Driver for number plate " + payload.numberPlate.numberPlateString + "(" + document["ownerFirstName"] + ")" + document["ownerLastName"] + ") has insufficient credit (" + document["credit"] + ") for a charge of " + payload.charge;
+
+          context.Logger.LogLine(message);
 
           /////////////////////////////////////////////////////////////
           //
@@ -420,11 +404,11 @@ The system so far is functional, but incomplete. In this task you will implement
       } 
       ```
 
-      You need to replace the `TODO` section with `callback( new errorInsufficientCredit(responseMessage));` to direct the state machine to be able to handle the error condition for *InsufficientCredit*. Note that the `errorInsufficientCredit` object is constructed with a string parameter that is used as a message or reason for the error being returned. Be sure to implement the correct error callback based on the conditions as stated in the source code `TODO` sections, otherwise the state machine logic will not make sense later.
+      You need to replace the `TODO` section with `throw new InsufficientCreditError(message);` to direct the state machine to be able to handle the error condition for *InsufficientCredit*. Note that the `errorInsufficientCredit` object is constructed with a string parameter that is used as a message or reason for the error being returned. Be sure to implement the correct error names based on the conditions as stated in the source code `TODO` sections, otherwise the state machine logic will not make sense later.
 
-      **Note:** If you get stuck and want to skip coding this function by hand, you will find a finished version of the full file at **Process/PlateDetected/index.full.js**. To use it, simply replace the contents of **Process/PlateDetected/index.js** with the contents of **Process/PlateDetected/index.full.js**. You can also use **Process/PlateDetected/index.full.js** as inspiration if you get stuck.
+      **Note:** If you get stuck and want to skip coding this function by hand, you will find a finished version of the full file at **Process/PlateDetected/Function.full**. To use it, simply replace the contents of **Process/PlateDetected/Function.cs** with the contents of **Process/PlateDetected/Function.full**. You can also use **Process/PlateDetected/Function.full** as inspiration if you get stuck.
 
-85. After making all the changes, save the **repos/Process/PlateDetected/index.js** file in the AWS Cloud9 IDE.
+85. After making all the changes, save the **repos/Process/PlateDetected/Function.cs** file in the AWS Cloud9 IDE.
 
 #### Deploy the changes using CI/CD
 
