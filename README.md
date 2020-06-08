@@ -35,10 +35,6 @@ Note: You must have a default VPC in the region you will run the workshop in. If
 
 `curl -s -L https://bit.ly/378xSmA | sh`
 
-or 
-
-`curl -s -L https://raw.githubusercontent.com/mosmabro/12-factor-dotnet-core-workshop/master/scripts/cloud9setup.sh | sh`
-
 **TODO: we will need to change this link after merging into master (perima account)**
 
 12.	We have created a bundle containing the skeleton of the system you are going to implement as part of this lab today. The bundle includes the step-by-step instructions you will follow once you reach the end of this primer document. During the bundle installation process (which you will run on the AWS Cloud9 IDE) you will be asked a series of questions, prompting you to provide data input. 
