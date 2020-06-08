@@ -3,6 +3,7 @@ using System;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -22,8 +23,9 @@ namespace PlateDetected
         public async Task<NumberPlateTrigger> FunctionHandler(NumberPlateTrigger payload, ILambdaContext context)
         {
 
+            context.Logger.LogLine($"PlateDetected event: {JsonConvert.SerializeObject(payload)}");
             Random rand = new Random((Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
-            if (rand.NextDouble() > double.Parse(Environment.GetEnvironmentVariable("RandomProcessingErrorProbability")))
+            if (rand.NextDouble() <= double.Parse(Environment.GetEnvironmentVariable("RandomProcessingErrorProbability")))
             {
                 string message = "Congratulations! A random processing error occurred!";
                 context.Logger.LogLine(message);
@@ -67,19 +69,14 @@ namespace PlateDetected
                 }
                 else
                 {
-                    string message = "Number plate " + payload.numberPlate.numberPlateString + "was not found. This will require manual resolution.";
+                    string message = "Number plate " + payload.numberPlate.numberPlateString + " was not found. This will require manual resolution.";
                     context.Logger.LogLine(message);
                     throw new UnknownNumberPlateError(message);
                 }
             }
             catch (AmazonDynamoDBException e)
             {
-              context.Logger.LogLine(e.StackTrace);
-              throw new DatabaseAccessError(e.Message);
-            }
-            catch (Exception e)
-            {
-              context.Logger.LogLine(e.StackTrace);
+              context.Logger.LogLine($"message: {e.Message}, Stack trace: {e.StackTrace}");
               throw new DatabaseAccessError(e.Message);
             }
 

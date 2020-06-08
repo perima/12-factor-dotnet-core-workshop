@@ -45,9 +45,10 @@ Resources:
             Events:
               - 's3:ObjectCreated:Put'
           Type: S3
-      Handler: NOOP/index.handler
+      CodeUri: ./NOOP/
+      Handler: NOOP::UploadTrigger.Function::FunctionHandler
       MemorySize: 512
-      Runtime: nodejs10.x
+      Runtime: dotnetcore3.1
       Timeout: 15
       Tracing: Active
       Environment:

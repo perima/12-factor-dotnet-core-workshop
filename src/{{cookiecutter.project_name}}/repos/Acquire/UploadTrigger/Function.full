@@ -84,7 +84,7 @@ namespace UploadTrigger
                     string plateNumber = "";
                     foreach (Match match in matches)
                     {
-                        plateNumber += match.Value;
+                        plateNumber += ( match.Groups[1].Value + match.Groups[2].Value);
                     }
                     if (!string.IsNullOrEmpty(plateNumber))
                     {

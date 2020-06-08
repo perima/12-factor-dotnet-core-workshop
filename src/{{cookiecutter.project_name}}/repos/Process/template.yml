@@ -47,6 +47,7 @@ Resources:
               - Action:
                   - 'dynamodb:GetItem'
                   - 'dynamodb:UpdateItem'
+                  - 'dynamodb:DescribeTable'
                 Effect: Allow
                 Resource: 
                   !Join
@@ -64,8 +65,9 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: !Sub {{cookiecutter.project_name}}-NOOP-${EnvironmentName}
-      Handler: NOOP/index.handler
-      Runtime: nodejs10.x
+      CodeUri: ./NOOP/
+      Handler: NOOP::PlateDetected.Function::FunctionHandler
+      Runtime: dotnetcore3.1
       Description: 'This is a placeholder Lambda function. It simply logs the event to CloudWatch Logs and returns successfully'
       MemorySize: 512
       Timeout: 3
@@ -78,8 +80,9 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: !Sub {{cookiecutter.project_name}}-PlateDetected-${EnvironmentName}
-      Handler: PlateDetected/index.handler
-      Runtime: nodejs10.x
+      CodeUri: ./PlateDetected/
+      Handler: PlateDetected::PlateDetected.Function::FunctionHandler
+      Runtime: dotnetcore3.1
       Description: ''
       MemorySize: 512
       Timeout: 15

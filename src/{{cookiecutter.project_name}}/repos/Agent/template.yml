@@ -96,6 +96,7 @@ Resources:
                   - 'dynamodb:GetItem'
                   - 'dynamodb:Query'
                   - 'dynamodb:Scan'
+                  - 'dynamodb:DescribeTable'
                 Effect: Allow
                 Resource: 
                   !Join
@@ -113,8 +114,9 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: !Sub {{cookiecutter.project_name}}-ActivityPoller-${EnvironmentName}
-      Handler: ActivityPoller/index.handler
-      Runtime: nodejs10.x
+      CodeUri: ./ActivityPoller/
+      Handler: ActivityPoller::ActivityPoller.Function::FunctionHandler
+      Runtime: dotnetcore3.1
       Description: Polls activities in the manual intervention state and processes them
       MemorySize: 512
       Timeout: 65
