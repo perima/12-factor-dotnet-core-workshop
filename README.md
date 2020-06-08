@@ -36,6 +36,7 @@ Note: You must have a default VPC in the region you will run the workshop in. If
 12.	We have created a bundle containing the skeleton of the system you are going to implement as part of this lab today. The bundle includes the step-by-step instructions you will follow once you reach the end of this primer document. During the bundle installation process (which you will run on the AWS Cloud9 IDE) you will be asked a series of questions, prompting you to provide data input. 
 Note: Follow the questions carefully to ensure you provide the correct details.
 Note: If you are using a shared account, you must ensure you use a unique project name.
+
 `sam init --location gh:mosmabro/12-factor-dotnet-core-workshop`
 
 13.	When the bundle customisation is complete, open the lab guide contained in the bundle to start the workshop. You can find the lab guide in the labguide folder of the project. Locate the file, right-click and choose **Preview**:
