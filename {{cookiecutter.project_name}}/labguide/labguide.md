@@ -154,7 +154,7 @@ In this first step you will deploy the **Process** environment for your Toll Roa
 39. Build the full CI/CD pipeline by running these two commands which make use of the AWS SAM CLI to transform the provided pipeline template into a CloudFormation stack:
 
     ```bash
-    aws cloudformation package --template-file pipeline.yml --output-template-file-file pipeline-export.yml --s3-bucket {{cookiecutter.codeupload_bucket_name}} --region {{cookiecutter.AWS_region}} 
+    aws cloudformation package --template-file pipeline.yml --output-template-file pipeline-export.yml --s3-bucket {{cookiecutter.codeupload_bucket_name}} --region {{cookiecutter.AWS_region}} 
 
     aws cloudformation deploy --template-file pipeline-export.yml  --stack-name {{cookiecutter.project_name_process}}-CICD-Pipeline --capabilities CAPABILITY_IAM --region {{cookiecutter.AWS_region}} 
     ```
