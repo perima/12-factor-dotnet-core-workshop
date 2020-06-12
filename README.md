@@ -8,7 +8,9 @@ Note: You must have a default VPC in the region you will run the workshop in. If
 <img src="images/img01.png"/>
 4.	For Environment name type TollRoadGantryIDE
 5.	For Description type:
+
 `Cloud-based IDE for setting up and developing the toll gantry system`
+
 <img src="images/img02.png"/>
 6.	Click **Next step**
 7.	On the **Configure settings** page, in the **Environment Settings** panel, select Create a new instance for environment (EC2)
@@ -32,6 +34,8 @@ Note: You must have a default VPC in the region you will run the workshop in. If
 - Install dotnet cli
 
 `curl -s -L https://bit.ly/378xSmA | sh`
+
+**TODO: we will need to change this link after merging into master (perima account)**
 
 12.	We have created a bundle containing the skeleton of the system you are going to implement as part of this lab today. The bundle includes the step-by-step instructions you will follow once you reach the end of this primer document. During the bundle installation process (which you will run on the AWS Cloud9 IDE) you will be asked a series of questions, prompting you to provide data input. 
 Note: Follow the questions carefully to ensure you provide the correct details.
