@@ -91,11 +91,11 @@ namespace ActivityPoller
               Html = new Content
               {
                 Charset = "UTF-8",
-                Data = $"Hello {document["ownerFirstName"]} {document["ownerLastName"]},<br /><br />Your vehicle with number plate <b>{document["numberPlate"]}</b> was recently detected on a toll road, but your account has insufficient credit to pay the toll.<br/><br/>" +
+                Data = $"Hello {document["ownerFirstName"]} {document["ownerLastName"]},<br/><br/>Your vehicle with number plate <b>{document["numberPlate"]}</b> was recently detected on a toll road, but your account has insufficient credit to pay the toll.<br/><br/>" +
                   $"<img src='{imageLink}'/><br/><a href='{imageLink}'>Click here to see the original image</a><br/><br/>" +
-                  "Please update your account balance immediately to avoid a fine." +
+                  "Please update your account balance immediately to avoid a fine. <br/>" +
                   $"<a href='{Environment.GetEnvironmentVariable("APIGWEndpoint")}topup/{document["numberPlate"]}?taskToken={HttpUtility.UrlEncode(response.TaskToken)}><b>Click this link to top up your account now.</b></a><br/>" +
-                  "<br><br> Thanks<br><b>Toll Road Administrator</b><br><br/>"
+                  "<br/><br/> Thanks<br/><b>Toll Road Administrator.</b><br/><br/>"
               },
               Text = new Content
               {
@@ -159,9 +159,9 @@ namespace ActivityPoller
                 Data = $"Hello {Environment.GetEnvironmentVariable("TargetEmailAddress")},< br />< br /> An image was captured at a toll booth, " +
                        "but the Number Plate Processor could not be confident that it could determine the actual number plate on the vehicle. We need your help to take a look at the image," +
                        "and make a determination.< br />< br />" +
-                       "<img src='{imageLink}'/><br/><a href=' {imageLink}'>Click here to see the original image if it is not appearing in the email correclty.</a><br/><br/>" +
+                       $"<img src='{imageLink}'/><br/><a href=' {imageLink}'>Click here to see the original image if it is not appearing in the email correclty.</a><br/><br/>" +
                        $"<a href='{Environment.GetEnvironmentVariable("APIGWEndpoint")}parse/{input.bucket}/{input.key}/5?imageLink={HttpUtility.UrlEncode(imageLink)}&taskToken={HttpUtility.UrlEncode(response.TaskToken)}'><b>Click this link to help assess the image and provide the number plate.</b></a><br/>" +
-                       "<br><br> Thanks<br><b>Toll Road Administrator</b><br><br/>"
+                       "<br/><br/>Thanks<br/><b>Toll Road Administrator.</b><br/><br/>"
             },
               Text = new Content
               {
