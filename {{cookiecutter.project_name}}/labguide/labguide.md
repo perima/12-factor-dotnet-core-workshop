@@ -344,14 +344,14 @@ The system so far is functional, but incomplete. In this task you will implement
 72. Locate the function **getNumberPlateFromSecretsManager** in the source code and note that it simply returns `.*` as the regular expression. Your task here is to modify this function so that it correctly returns the `NumberPlateRegEx` value that is stored in AWS Secrets Manager, using the sample code as inspiration. The pseudo code for your implementation should do the following:
 
   -   Instantiate the SecretsManager client object from the AWS SDK (note that when you construct the client, you do not have to specify endpoint and region).
-  -   Call `GetSecretValueAsync({SecretId: "/Staging/{{cookiecutter.project_name}}/Metadata"}, ()=> ...)` to retrieve the secret.
+  -   Call `GetSecretValueAsync(context)` to retrieve the secret.
   -   Handle errors - in all cases, log the error and then simply return a valid regular expression such as `.*`. In a real environment implementation, you would handle errors robustly, but for this workshop, simply falling back to a 'catch all' expression is ok
   -   Assuming all is ok, dereference the `SecretString` field of the return object and parse it as JSON using `JsonConvert.DeserializeObject(...)`
   -   In the resulting object, dereference the `NumberPlateRegEx` property to get the value to return from the function.
 
       Note: If you get stuck and want to skip coding this function by hand, you will find a finished version of the function in UploadTrigger/getNumberPlateFromSecretsManager.txt
 
-#### Implement code to trigger the AWS Step Function in the **repos/Acquire/UploadTrigger/index.js** file
+#### Implement code to trigger the AWS Step Function in the **repos/Acquire/UploadTrigger/Function.cs** file
 
 73. In the same **UploadTrigger/Function.cs** file, locate the line `// TODO: Call the Step Function using the AWS SDK`.
 74. [Refer to the documentation here](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#startExecution-property) and call the `StartExecutionAsync` method of the `AmazonStepFunctionsClient` client object, passing in the `StartExecutionRequest` object that has already been constructed in the code provided. The StartExecutionRequest object has the ARN of the state machine to trigger, and the input object to pass in:
