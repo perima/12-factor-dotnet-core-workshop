@@ -53,7 +53,7 @@ Resources:
             Environment: 
                 Type: LINUX_CONTAINER
                 ComputeType: BUILD_GENERAL1_LARGE
-                Image: aws/codebuild/nodejs:10.1.0 # More info on Images: https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
+                Image: aws/codebuild/standard:4.0 # More info on Images: https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
                 EnvironmentVariables:
                   - 
                     Name: BUILD_OUTPUT_BUCKET
