@@ -47,6 +47,7 @@ Resources:
               - Action:
                   - 'dynamodb:GetItem'
                   - 'dynamodb:UpdateItem'
+                  - 'dynamodb:DescribeTable'
                 Effect: Allow
                 Resource: 
                   !Join
