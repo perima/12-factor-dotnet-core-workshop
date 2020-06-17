@@ -11,7 +11,7 @@ The base bundle has been downloaded and the various components have been customi
 
 ---
 
-### Task 1: Deploy the Baseline Staging and Prod environments (Isolation and Dependency Management)
+### Task 1: Deploy the Baseline Staging and Prod environments
 
 ---
 
