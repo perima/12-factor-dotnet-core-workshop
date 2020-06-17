@@ -33,7 +33,7 @@ Note: You must have a default VPC in the region you will run the workshop in. If
 
 - Install dotnet cli
 
-`curl -s -L https://bit.ly/378xSmA | sh`
+`curl -s -L https://bit.ly/12FactorLabSetupScript | sh`
 
 12.	We have created a bundle containing the skeleton of the system you are going to implement as part of this lab today. The bundle includes the step-by-step instructions you will follow once you reach the end of this primer document. During the bundle installation process (which you will run on the AWS Cloud9 IDE) you will be asked a series of questions, prompting you to provide data input. 
 Note: Follow the questions carefully to ensure you provide the correct details.
