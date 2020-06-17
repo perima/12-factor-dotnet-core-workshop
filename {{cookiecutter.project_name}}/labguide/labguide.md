@@ -1,14 +1,17 @@
 # Building modern applications that align with 12-Factor methods
 
-## Part 2 - Hands-on Lab Instructions
+## Hands-on Lab Instructions
 
 Welcome to the Hands-on Lab section of the workshop! Now that you have your IDE environment set up, you are ready to start building your Toll Road Gantry Management System.
 
 The base bundle has been downloaded and the various components have been customised to your environment based on the answers you provided to the questions during the initialisation process. This lab guide has also been customised to match your environment, making it easy for you to simply cut-and-paste the various commands right from this guide. 
 
+
+## Part 1: Isolation and Dependency Management
+
 ---
 
-### Task 1: Deploy the Baseline Staging and Prod environments (15 minutes)
+### Task 1: Deploy the Baseline Staging and Prod environments (Isolation and Dependency Management)
 
 ---
 
@@ -130,6 +133,8 @@ In this task you will deploy the baseline environment for your Toll Road Gantry 
     ```
 
     You have now fully configured your **Prod** baseline environment, with a code repository and configuration items stored in AWS Secrets Manager and AWS SSM Parameter Store.
+
+## Part 2: Deployment Automation
 
 ---
 
@@ -303,7 +308,13 @@ In this section, you will upload an image to test the system end-to-end. Note th
 
     You now have an end-to-end test suite on which to base your modifications as described in the following tasks.
 
+## Part 3: Compute & Invocation
+
+---
+
 ### Task 5: Implement the missing functionality for the Acquire and Process components (30 minutes)
+
+---
 
 The system so far is functional, but incomplete. In this task you will implement the following items in the **Acquire** and **Process** components:
 
