@@ -336,7 +336,7 @@ The system so far is functional, but incomplete. In this task you will implement
 #### Implement code to retrieve the Number Plate RegEx from AWS Secrets Manager in the **repos/Acquire/UploadTrigger/index.js** file
 
 68. Open the AWS Secrets Manager console [using this link](https://{{cookiecutter.AWS_region}}.console.aws.amazon.com/secretsmanager/home?region={{cookiecutter.AWS_region}}#/listSecrets), and click on the link for Staging/{{cookiecutter.project_name}}/Metadata. Be sure to open the link in a new tab/window in the browser.
-69. Scroll down to the **Sample code** section and select **Javascript**
+69. Scroll down to the **Sample code** section and select **C#**
 70. Note how the sample code instantiates the SecretsManager client?
 
     ```csharp
@@ -365,7 +365,7 @@ The system so far is functional, but incomplete. In this task you will implement
 #### Implement code to trigger the AWS Step Function in the **repos/Acquire/UploadTrigger/Function.cs** file
 
 73. In the same **UploadTrigger/Function.cs** file, locate the line `// TODO: Call the Step Function using the AWS SDK`.
-74. [Refer to the documentation here](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#startExecution-property) and call the `StartExecutionAsync` method of the `AmazonStepFunctionsClient` client object, passing in the `StartExecutionRequest` object that has already been constructed in the code provided. The StartExecutionRequest object has the ARN of the state machine to trigger, and the input object to pass in:
+74. [Refer to the documentation here](https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/StepFunctions/MStepFunctionsStartExecutionStartExecutionRequest.html) and call the `StartExecutionAsync` method of the `AmazonStepFunctionsClient` client object, passing in the `StartExecutionRequest` object that has already been constructed in the code provided. The StartExecutionRequest object has the ARN of the state machine to trigger, and the input object to pass in:
 
     ```csharp
     new StartExecutionRequest() { 
