@@ -15,7 +15,7 @@
     <PackageReference Include="AWSSDK.StepFunctions" Version="3.3.104.52" />
     <PackageReference Include="AWSSDK.XRay" Version="3.3.102.38" />
     <PackageReference Include="AWSXRayRecorder" Version="2.8.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 </Project>
 
